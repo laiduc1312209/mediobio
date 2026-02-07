@@ -355,7 +355,7 @@ export default function AdminDashboard() {
                             ) : (
                                 <Plus className="w-5 h-5" />
                             )}
-                            Tạo Mã Giới Thiệu
+                            Tạo Key
                         </button>
                     </div>
 
@@ -365,7 +365,7 @@ export default function AdminDashboard() {
                             <table className="w-full">
                                 <thead className="bg-gray-700">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Mã Giới Thiệu</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Key</th>
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Trạng Thái</th>
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Người Sử Dụng</th>
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Ngày Sử Dụng</th>
@@ -382,7 +382,7 @@ export default function AdminDashboard() {
                                     ) : keysData?.keys?.length === 0 ? (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
-                                                Chưa có mã giới thiệu nào
+                                                Chưa có key
                                             </td>
                                         </tr>
                                     ) : (
