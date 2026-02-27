@@ -174,7 +174,10 @@ export default function Home() {
         <div className="container-custom">
           <div className="text-center text-gray-600 dark:text-gray-400">
             <p className="font-medium mb-2">© 2026 MediBio - Nền tảng hồ sơ y tế an toàn</p>
-            <p className="text-sm">Made by PLD, For healthcare</p>
+            <p className="text-sm mb-3">Made by PLD, For healthcare</p>
+            <Link href="/terms" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+              Điều khoản sử dụng
+            </Link>
           </div>
         </div>
       </footer>

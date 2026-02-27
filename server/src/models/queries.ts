@@ -339,6 +339,8 @@ export const adminQueries = {
     },
 
     async deleteUserById(userId: string): Promise<void> {
+        await pool.query('UPDATE invitation_keys SET used_by = NULL, is_used = FALSE, used_at = NULL WHERE used_by = $1', [userId]);
+        await pool.query('UPDATE invitation_keys SET created_by = NULL WHERE created_by = $1', [userId]);
         await pool.query('DELETE FROM users WHERE id = $1', [userId]);
     },
 

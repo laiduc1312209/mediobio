@@ -22,6 +22,7 @@ export default function RegisterPage() {
         confirmPassword: '',
         invitationKey: '',
     });
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -44,6 +45,11 @@ export default function RegisterPage() {
 
         if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
             setError('Tên đăng nhập chỉ được chứa chữ cái, số, gạch ngang và gạch dưới');
+            return;
+        }
+
+        if (!agreedToTerms) {
+            setError('Bạn phải đồng ý với Điều khoản sử dụng để tiếp tục');
             return;
         }
 
@@ -212,10 +218,28 @@ export default function RegisterPage() {
                             />
                         </div>
 
+                        {/* Terms Agreement Checkbox */}
+                        <div className="flex items-start gap-3 mt-2">
+                            <input
+                                id="agreedToTerms"
+                                type="checkbox"
+                                checked={agreedToTerms}
+                                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer accent-blue-600"
+                                disabled={!!success || registerMutation.isPending}
+                            />
+                            <label htmlFor="agreedToTerms" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+                                Tôi đã đọc và đồng ý với{' '}
+                                <Link href="/terms" target="_blank" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                                    Điều khoản sử dụng & Miễn trừ trách nhiệm
+                                </Link>
+                            </label>
+                        </div>
+
                         <button
                             type="submit"
-                            disabled={registerMutation.isPending || !!success}
-                            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+                            disabled={registerMutation.isPending || !!success || !agreedToTerms}
+                            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
                         >
                             {registerMutation.isPending || !!success ? (
                                 <>
