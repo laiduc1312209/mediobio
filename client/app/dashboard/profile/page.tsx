@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useProfile, useUpdateProfile, useContacts, useCreateContact, useDeleteContact, useUploadAvatar } from '@/lib/hooks';
-import { ArrowLeft, Droplets, Heart, AlertTriangle, Phone, X, Plus, Shield, Lock, Link2, Trash2, Camera, Loader2 } from 'lucide-react';
+import { ArrowLeft, Droplets, Heart, AlertTriangle, Phone, X, Plus, Shield, Lock, Link2, Trash2, Camera, Loader2, Activity } from 'lucide-react';
 import { useRef } from 'react';
 
 interface EmergencyContact {
@@ -33,6 +33,9 @@ export default function EditProfilePage() {
         dateOfBirth: '',
         bloodType: '',
         allergies: [] as string[],
+        medicalConditions: [] as string[],
+        currentMedications: [] as string[],
+        medicalHistory: '',
         firstAidInstructions: '',
         personalMessage: '',
         privacyLevel: 'link_only' as 'public' | 'link_only' | 'pin_protected',
@@ -40,6 +43,8 @@ export default function EditProfilePage() {
     });
 
     const [allergyInput, setAllergyInput] = useState('');
+    const [conditionInput, setConditionInput] = useState('');
+    const [medicationInput, setMedicationInput] = useState('');
     const [contactInput, setContactInput] = useState<EmergencyContact>({
         name: '',
         relationship: '',
@@ -69,6 +74,9 @@ export default function EditProfilePage() {
                 dateOfBirth: formatDateForInput(profile.dateOfBirth),
                 bloodType: profile.bloodType || '',
                 allergies: profile.allergies || [],
+                medicalConditions: profile.medicalConditions || [],
+                currentMedications: profile.currentMedications || [],
+                medicalHistory: profile.medicalHistory || '',
                 firstAidInstructions: profile.doctorNotes || '',
                 personalMessage: profile.personalMessage || '',
                 privacyLevel: profile.privacyLevel || 'link_only',
@@ -91,6 +99,40 @@ export default function EditProfilePage() {
         setFormData(prev => ({
             ...prev,
             allergies: prev.allergies.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleAddCondition = () => {
+        if (conditionInput.trim() && !formData.medicalConditions.includes(conditionInput.trim())) {
+            setFormData(prev => ({
+                ...prev,
+                medicalConditions: [...prev.medicalConditions, conditionInput.trim()]
+            }));
+            setConditionInput('');
+        }
+    };
+
+    const handleRemoveCondition = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            medicalConditions: prev.medicalConditions.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleAddMedication = () => {
+        if (medicationInput.trim() && !formData.currentMedications.includes(medicationInput.trim())) {
+            setFormData(prev => ({
+                ...prev,
+                currentMedications: [...prev.currentMedications, medicationInput.trim()]
+            }));
+            setMedicationInput('');
+        }
+    };
+
+    const handleRemoveMedication = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            currentMedications: prev.currentMedications.filter((_, i) => i !== index)
         }));
     };
 
@@ -142,6 +184,9 @@ export default function EditProfilePage() {
                 dateOfBirth: formData.dateOfBirth,
                 bloodType: formData.bloodType || undefined,
                 allergies: formData.allergies,
+                medicalConditions: formData.medicalConditions,
+                currentMedications: formData.currentMedications,
+                medicalHistory: formData.medicalHistory || undefined,
                 firstAidInstructions: formData.firstAidInstructions || undefined,
                 personalMessage: formData.personalMessage || undefined,
                 privacyLevel: formData.privacyLevel,
@@ -162,7 +207,7 @@ export default function EditProfilePage() {
     if (isLoading || contactsLoading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -172,7 +217,7 @@ export default function EditProfilePage() {
             <div className="max-w-4xl mx-auto">
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800 rounded-xl p-6 text-center">
                     <p className="text-yellow-800 dark:text-yellow-300 mb-4">Bạn chưa có hồ sơ y tế.</p>
-                    <Link href="/dashboard/profile/create" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                    <Link href="/dashboard/profile/create" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
                         Tạo hồ sơ ngay →
                     </Link>
                 </div>
@@ -186,14 +231,21 @@ export default function EditProfilePage() {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-                <Link href="/dashboard" className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 mb-4">
+                <Link href="/dashboard" className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-2 mb-4">
                     <ArrowLeft className="w-5 h-5" />
                     Quay lại Dashboard
                 </Link>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Chỉnh Sửa Hồ Sơ Y Tế</h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                    Cập nhật thông tin y tế của bạn.
-                </p>
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <Shield className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Hồ Sơ Y Tế</h1>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Quản lý thông tin sức khỏe cá nhân của bạn theo chuẩn chuyên gia.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {error && (
@@ -219,10 +271,10 @@ export default function EditProfilePage() {
                                 <img
                                     src={profile.avatarUrl}
                                     alt={formData.fullName}
-                                    className="w-24 h-24 rounded-full object-cover ring-4 ring-blue-100 dark:ring-blue-900/30"
+                                    className="w-24 h-24 rounded-full object-cover ring-4 ring-indigo-100 dark:ring-indigo-900/30"
                                 />
                             ) : (
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ring-4 ring-blue-100 dark:ring-blue-900/30">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-4 ring-indigo-100 dark:ring-indigo-900/30">
                                     <span className="text-3xl font-bold text-white">{formData.fullName?.[0] || '?'}</span>
                                 </div>
                             )}
@@ -230,7 +282,7 @@ export default function EditProfilePage() {
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploadAvatarMutation.isPending || isDisabled}
-                                className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50"
+                                className="absolute bottom-0 right-0 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50"
                             >
                                 {uploadAvatarMutation.isPending ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -280,26 +332,135 @@ export default function EditProfilePage() {
                                 required
                                 value={formData.fullName}
                                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                disabled={isDisabled}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Ngày sinh <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                id="dateOfBirth"
-                                type="date"
-                                required
-                                value={formData.dateOfBirth}
-                                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                disabled={isDisabled}
-                            />
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    disabled={isDisabled}
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Ngày sinh <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    id="dateOfBirth"
+                                    type="date"
+                                    required
+                                    value={formData.dateOfBirth}
+                                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    disabled={isDisabled}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    {/* Medical Conditions & History - NEW SECTION */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                        <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <Activity className="w-6 h-6 text-indigo-600" />
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tình Trạng Sức Khỏe</h2>
+                        </div>
+
+                        <div className="space-y-8">
+                            {/* Medical Conditions */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                    Bệnh lý / Tình trạng sức khỏe
+                                </label>
+                                <div className="flex gap-2 mb-4">
+                                    <input
+                                        type="text"
+                                        value={conditionInput}
+                                        onChange={(e) => setConditionInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCondition())}
+                                        className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="Ví dụ: Tiểu đường, Cao huyết áp, Hen suyễn..."
+                                        disabled={isDisabled}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCondition}
+                                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center gap-2"
+                                        disabled={isDisabled}
+                                    >
+                                        <Plus className="w-4 h-4" /> Thêm
+                                    </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.medicalConditions.map((condition, index) => (
+                                        <span key={index} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-xl font-medium border border-indigo-100 dark:border-indigo-800">
+                                            {condition}
+                                            <button type="button" onClick={() => handleRemoveCondition(index)} className="hover:text-indigo-900 dark:hover:text-indigo-200" disabled={isDisabled}>
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                    {formData.medicalConditions.length === 0 && (
+                                        <p className="text-sm text-gray-400 italic">Chưa có thông tin bệnh lý</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Current Medications */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                    Các loại thuốc đang sử dụng
+                                </label>
+                                <div className="flex gap-2 mb-4">
+                                    <div className="relative flex-1">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Heart className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={medicationInput}
+                                            onChange={(e) => setMedicationInput(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMedication())}
+                                            className="w-full pl-10 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            placeholder="Ví dụ: Insulin, Paracetamol, Vitamin C..."
+                                            disabled={isDisabled}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddMedication}
+                                        className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium flex items-center gap-2"
+                                        disabled={isDisabled}
+                                    >
+                                        <Plus className="w-4 h-4" /> Thêm
+                                    </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.currentMedications.map((medication, index) => (
+                                        <span key={index} className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-xl font-medium border border-purple-100 dark:border-purple-800">
+                                            {medication}
+                                            <button type="button" onClick={() => handleRemoveMedication(index)} className="hover:text-purple-900 dark:hover:text-purple-200" disabled={isDisabled}>
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                    {formData.currentMedications.length === 0 && (
+                                        <p className="text-sm text-gray-400 italic">Chưa có thông tin thuốc</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Medical History */}
+                            <div>
+                                <label htmlFor="medicalHistory" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                    Tiền sử bệnh tật / Phẫu thuật
+                                </label>
+                                <textarea
+                                    id="medicalHistory"
+                                    rows={4}
+                                    value={formData.medicalHistory}
+                                    onChange={(e) => setFormData({ ...formData, medicalHistory: e.target.value })}
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Ghi lại các bệnh lý mãn tính, các ca phẫu thuật đã từng thực hiện..."
+                                    disabled={isDisabled}
+                                />
+                            </div>
+                        </div>
+                    </div>
 
                 {/* Blood Type - HIGHLIGHTED */}
                 <div className="bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl shadow-lg p-6 text-white">
@@ -385,7 +546,7 @@ export default function EditProfilePage() {
                 {/* Emergency Contacts */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <Phone className="w-6 h-6 text-blue-600" />
+                        <Phone className="w-6 h-6 text-indigo-600" />
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Số Điện Thoại Khẩn Cấp</h2>
                     </div>
 
@@ -411,7 +572,7 @@ export default function EditProfilePage() {
                                 type="tel"
                                 value={contactInput.phone}
                                 onChange={(e) => setContactInput({ ...contactInput, phone: e.target.value })}
-                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 placeholder="Số điện thoại"
                                 disabled={isDisabled || isContactLoading}
                             />
@@ -419,7 +580,7 @@ export default function EditProfilePage() {
                         <button
                             type="button"
                             onClick={handleAddContact}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50"
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50"
                             disabled={isDisabled || isContactLoading || !contactInput.name.trim() || !contactInput.phone.trim()}
                         >
                             {isContactLoading ? (
@@ -438,7 +599,7 @@ export default function EditProfilePage() {
                                     <div>
                                         <span className="font-medium text-gray-900 dark:text-white">{contact.name}</span>
                                         {contact.relationship && <span className="text-gray-500 dark:text-gray-400"> ({contact.relationship})</span>}
-                                        <span className="text-blue-600 dark:text-blue-400 ml-2">{contact.phone}</span>
+                                        <span className="text-indigo-600 dark:text-indigo-400 ml-2">{contact.phone}</span>
                                     </div>
                                     <button
                                         type="button"
@@ -549,7 +710,7 @@ export default function EditProfilePage() {
                     <button
                         type="submit"
                         disabled={isDisabled}
-                        className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
                     >
                         {updateProfileMutation.isPending || success ? (
                             <>

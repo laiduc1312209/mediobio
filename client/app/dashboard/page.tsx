@@ -10,7 +10,7 @@ export default function DashboardPage() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -40,12 +40,12 @@ export default function DashboardPage() {
             </div>
 
             {profile && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-6 mb-8">
-                    <h3 className="text-lg font-bold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl p-6 mb-8">
+                    <h3 className="text-lg font-bold text-indigo-800 dark:text-indigo-300 mb-3 flex items-center gap-2">
                         <LinkIcon className="w-5 h-5" />
                         Chia sẻ hồ sơ y tế của bạn
                     </h3>
-                    <p className="text-blue-700 dark:text-blue-200 text-sm mb-3">
+                    <p className="text-indigo-700 dark:text-indigo-200 text-sm mb-3">
                         Link này cho phép người khác (bác sĩ, nhân viên y tế, gia đình) xem hồ sơ y tế của bạn trong trường hợp khẩn cấp
                     </p>
                     <div className="flex gap-2">
@@ -53,14 +53,14 @@ export default function DashboardPage() {
                             type="text"
                             readOnly
                             value={`${window.location.origin}/bio/${profile.bioSlug}`}
-                            className="flex-1 px-4 py-2 border border-blue-200 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                            className="flex-1 px-4 py-2 border border-indigo-200 dark:border-indigo-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                         />
                         <button
                             onClick={() => {
                                 navigator.clipboard.writeText(`${window.location.origin}/bio/${profile.bioSlug}`);
                                 alert('Đã sao chép link!');
                             }}
-                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                         >
                             <Copy className="w-5 h-5" />
                             Sao chép
@@ -74,7 +74,7 @@ export default function DashboardPage() {
                 {/* Profile Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col">
                     <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
+                        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg">
                             <User className="w-6 h-6" />
                         </div>
                         {profile ? (
@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
                     <Link
                         href={profile ? "/dashboard/profile" : "/dashboard/profile/create"}
-                        className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-center"
+                        className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors text-center"
                     >
                         {profile ? "Chỉnh sửa hồ sơ" : "Tạo hồ sơ ngay"}
                     </Link>
@@ -129,14 +129,14 @@ export default function DashboardPage() {
 
             {/* Recent Activity or Status */}
             {!profile && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-6">
-                    <h4 className="text-lg font-bold text-blue-800 dark:text-blue-300 mb-2">
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl p-6">
+                    <h4 className="text-lg font-bold text-indigo-800 dark:text-indigo-300 mb-2">
                         Chào mừng bạn mới! 👋
                     </h4>
-                    <p className="text-blue-700 dark:text-blue-200 mb-4">
+                    <p className="text-indigo-700 dark:text-indigo-200 mb-4">
                         Để bắt đầu, hãy tạo hồ sơ y tế của bạn. Hồ sơ này sẽ giúp các bác sĩ và nhân viên y tế nắm bắt tình trạng sức khỏe của bạn nhanh chóng trong trường hợp khẩn cấp.
                     </p>
-                    <Link href="/dashboard/profile/create" className="text-blue-700 dark:text-blue-300 font-semibold hover:underline">
+                    <Link href="/dashboard/profile/create" className="text-indigo-700 dark:text-indigo-300 font-semibold hover:underline">
                         Tạo hồ sơ ngay &rarr;
                     </Link>
                 </div>

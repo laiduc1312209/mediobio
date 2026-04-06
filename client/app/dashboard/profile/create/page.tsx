@@ -1,28 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCreateProfile, useCreateContact } from '@/lib/hooks';
-import { ArrowLeft, Droplets, AlertTriangle, Phone, Heart, Trash2, Plus, Info } from 'lucide-react';
+import { useCreateProfile, useCreateContact, useUploadAvatar, useProfile } from '@/lib/hooks';
+import { ArrowLeft, Droplets, Heart, AlertTriangle, Phone, X, Plus, Shield, Lock, Trash2, Camera, Loader2, Activity, Pill, ClipboardList } from 'lucide-react';
 
 export default function CreateProfilePage() {
     const router = useRouter();
+    const { data: profile } = useProfile();
     const createProfileMutation = useCreateProfile();
     const createContactMutation = useCreateContact();
+    const uploadAvatarMutation = useUploadAvatar();
+    
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
         fullName: '',
         dateOfBirth: '',
+        avatarUrl: '',
         bloodType: '',
         allergies: [] as string[],
+        medicalConditions: [] as string[],
+        currentMedications: [] as string[],
+        medicalHistory: '',
         firstAidInstructions: '',
+        personalMessage: '',
         privacyLevel: 'link_only' as 'public' | 'link_only' | 'pin_protected',
         pin: '',
     });
 
     const [allergyInput, setAllergyInput] = useState('');
-
+    const [conditionInput, setConditionInput] = useState('');
+    const [medicationInput, setMedicationInput] = useState('');
+    
     const [emergencyContacts, setEmergencyContacts] = useState<Array<{
         name: string;
         relationship: string;
@@ -38,8 +49,14 @@ export default function CreateProfilePage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Redirect if profile already exists
+    if (profile && !success) {
+        router.push('/dashboard/profile');
+        return null;
+    }
+
     const handleAddAllergy = () => {
-        if (allergyInput.trim()) {
+        if (allergyInput.trim() && !formData.allergies.includes(allergyInput.trim())) {
             setFormData(prev => ({
                 ...prev,
                 allergies: [...prev.allergies, allergyInput.trim()]
@@ -55,10 +72,42 @@ export default function CreateProfilePage() {
         }));
     };
 
-    const handleAddContact = () => {
-        if (!contactInput.name.trim() || !contactInput.phone.trim()) {
-            return;
+    const handleAddCondition = () => {
+        if (conditionInput.trim() && !formData.medicalConditions.includes(conditionInput.trim())) {
+            setFormData(prev => ({
+                ...prev,
+                medicalConditions: [...prev.medicalConditions, conditionInput.trim()]
+            }));
+            setConditionInput('');
         }
+    };
+
+    const handleRemoveCondition = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            medicalConditions: prev.medicalConditions.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleAddMedication = () => {
+        if (medicationInput.trim() && !formData.currentMedications.includes(medicationInput.trim())) {
+            setFormData(prev => ({
+                ...prev,
+                currentMedications: [...prev.currentMedications, medicationInput.trim()]
+            }));
+            setMedicationInput('');
+        }
+    };
+
+    const handleRemoveMedication = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            currentMedications: prev.currentMedications.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleAddContact = () => {
+        if (!contactInput.name.trim() || !contactInput.phone.trim()) return;
         setEmergencyContacts(prev => [...prev, { ...contactInput }]);
         setContactInput({ name: '', relationship: '', phone: '' });
     };
@@ -91,9 +140,9 @@ export default function CreateProfilePage() {
                 pin: formData.privacyLevel === 'pin_protected' ? formData.pin : undefined,
             };
 
-            await createProfileMutation.mutateAsync(submitData);
+            const newProfile = await createProfileMutation.mutateAsync(submitData);
 
-            // Create emergency contacts after profile is created
+            // Create emergency contacts
             for (let i = 0; i < emergencyContacts.length; i++) {
                 const contact = emergencyContacts[i];
                 try {
@@ -121,35 +170,99 @@ export default function CreateProfilePage() {
     const isDisabled = createProfileMutation.isPending || !!success;
 
     return (
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-                <Link href="/dashboard" className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 mb-4">
+                <Link href="/dashboard" className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-2 mb-4">
                     <ArrowLeft className="w-5 h-5" />
                     Quay lại Dashboard
                 </Link>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Tạo Hồ Sơ Y Tế</h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                    Thông tin quan trọng để hỗ trợ bạn trong trường hợp khẩn cấp
-                </p>
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <Plus className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tạo Hồ Sơ Y Tế</h1>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Bắt đầu hành trình chăm sóc sức khỏe chuyên nghiệp của bạn.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {error && (
-                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded dark:bg-red-900/40 dark:text-red-300">
-                    {error}
+                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm flex items-start dark:bg-red-900/40 dark:text-red-300">
+                    <X className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                    <span className="font-medium">{error}</span>
                 </div>
             )}
 
             {success && (
-                <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded dark:bg-green-900/40 dark:text-green-300">
-                    {success}
+                <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm flex items-start dark:bg-green-900/40 dark:text-green-300">
+                    <span className="font-medium">{success}</span>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Avatar Upload */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Ảnh Đại Diện</h2>
+                    <div className="flex items-center gap-6">
+                        <div className="relative">
+                            {formData.avatarUrl ? (
+                                <img
+                                    src={formData.avatarUrl}
+                                    className="w-24 h-24 rounded-full object-cover ring-4 ring-indigo-100 dark:ring-indigo-900/30"
+                                    alt="Avatar Preview"
+                                />
+                            ) : (
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-4 ring-indigo-100 dark:ring-indigo-900/30">
+                                    <span className="text-3xl font-bold text-white">{formData.fullName?.[0] || '?'}</span>
+                                </div>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadAvatarMutation.isPending || isDisabled}
+                                className="absolute bottom-0 right-0 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50"
+                            >
+                                {uploadAvatarMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Camera className="w-4 h-4" />
+                                )}
+                            </button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        try {
+                                            const res = await uploadAvatarMutation.mutateAsync(file);
+                                            setFormData(prev => ({ ...prev, avatarUrl: res.data.avatarUrl }));
+                                        } catch (err: any) {
+                                            setError('Không thể tải ảnh lên. Vui lòng thử lại.');
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                Nhấn vào biểu tượng máy ảnh để tải ảnh đại diện lên.
+                            </p>
+                            <p className="text-gray-500 dark:text-gray-500 text-xs mt-1">
+                                Hỗ trợ: JPG, PNG, GIF. Tối đa 2MB.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Basic Information */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Thông Tin Cơ Bản</h2>
-
                     <div className="grid md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -160,12 +273,11 @@ export default function CreateProfilePage() {
                                 required
                                 value={formData.fullName}
                                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 placeholder="Nguyễn Văn A"
                                 disabled={isDisabled}
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Ngày sinh <span className="text-red-500">*</span>
@@ -175,7 +287,106 @@ export default function CreateProfilePage() {
                                 required
                                 value={formData.dateOfBirth}
                                 onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                disabled={isDisabled}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Medical Conditions & History */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                    <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+                        <Activity className="w-6 h-6 text-indigo-600" />
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tình Trạng Sức Khỏe</h2>
+                    </div>
+
+                    <div className="space-y-8">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                Bệnh lý / Tình trạng sức khỏe
+                            </label>
+                            <div className="flex gap-2 mb-4">
+                                <input
+                                    type="text"
+                                    value={conditionInput}
+                                    onChange={(e) => setConditionInput(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCondition())}
+                                    className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Ví dụ: Tiểu đường, Cao huyết áp, Hen suyễn..."
+                                    disabled={isDisabled}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAddCondition}
+                                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center gap-2"
+                                    disabled={isDisabled}
+                                >
+                                    <Plus className="w-4 h-4" /> Thêm
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {formData.medicalConditions.map((condition, index) => (
+                                    <span key={index} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-xl font-medium border border-indigo-100 dark:border-indigo-800">
+                                        {condition}
+                                        <button type="button" onClick={() => handleRemoveCondition(index)} className="hover:text-indigo-900" disabled={isDisabled}>
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                Các loại thuốc đang sử dụng
+                            </label>
+                            <div className="flex gap-2 mb-4">
+                                <div className="relative flex-1">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Heart className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={medicationInput}
+                                        onChange={(e) => setMedicationInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMedication())}
+                                        className="w-full pl-10 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="Ví dụ: Insulin, Paracetamol, Vitamin C..."
+                                        disabled={isDisabled}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleAddMedication}
+                                    className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium flex items-center gap-2"
+                                    disabled={isDisabled}
+                                >
+                                    <Plus className="w-4 h-4" /> Thêm
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {formData.currentMedications.map((medication, index) => (
+                                    <span key={index} className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-xl font-medium border border-purple-100 dark:border-purple-800">
+                                        {medication}
+                                        <button type="button" onClick={() => handleRemoveMedication(index)} className="hover:text-purple-900" disabled={isDisabled}>
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                Tiền sử bệnh tật / Phẫu thuật
+                            </label>
+                            <textarea
+                                rows={4}
+                                value={formData.medicalHistory}
+                                onChange={(e) => setFormData({ ...formData, medicalHistory: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400"
+                                placeholder="Ghi lại các bệnh lý mãn tính, các ca phẫu thuật đã từng thực hiện..."
                                 disabled={isDisabled}
                             />
                         </div>
@@ -183,103 +394,77 @@ export default function CreateProfilePage() {
                 </div>
 
                 {/* Blood Type - HIGHLIGHTED */}
-                <div className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-2xl shadow-sm border-2 border-red-200 dark:border-red-800 p-6">
+                <div className="bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl shadow-lg p-6 text-white">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-red-500 rounded-lg">
-                            <Droplets className="w-6 h-6 text-white" />
-                        </div>
-                        <h2 className="text-xl font-bold text-red-800 dark:text-red-300">Nhóm Máu</h2>
+                        <Droplets className="w-6 h-6" />
+                        <h2 className="text-xl font-bold">Nhóm Máu</h2>
                     </div>
-
                     <select
                         value={formData.bloodType}
                         onChange={(e) => setFormData({ ...formData, bloodType: e.target.value })}
-                        className="w-full max-w-xs px-4 py-3 border-2 border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 font-semibold text-lg"
+                        className="w-full px-4 py-3 border-0 rounded-lg bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 text-lg font-semibold"
                         disabled={isDisabled}
                     >
-                        <option value="">Chọn nhóm máu</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
+                        <option value="" className="text-gray-900">Chọn nhóm máu</option>
+                        <option value="A+" className="text-gray-900">A+</option>
+                        <option value="A-" className="text-gray-900">A-</option>
+                        <option value="B+" className="text-gray-900">B+</option>
+                        <option value="B-" className="text-gray-900">B-</option>
+                        <option value="AB+" className="text-gray-900">AB+</option>
+                        <option value="AB-" className="text-gray-900">AB-</option>
+                        <option value="O+" className="text-gray-900">O+</option>
+                        <option value="O-" className="text-gray-900">O-</option>
                     </select>
                 </div>
 
                 {/* Allergies */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border-l-4 border-yellow-500 p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-yellow-500 rounded-lg">
-                            <AlertTriangle className="w-6 h-6 text-white" />
-                        </div>
+                        <AlertTriangle className="w-6 h-6 text-yellow-500" />
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Dị Ứng</h2>
                     </div>
-
                     <div className="flex gap-2 mb-4">
                         <input
                             type="text"
                             value={allergyInput}
                             onChange={(e) => setAllergyInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddAllergy())}
-                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
                             placeholder="Ví dụ: Penicillin, Hải sản, Đậu phộng..."
                             disabled={isDisabled}
                         />
                         <button
                             type="button"
                             onClick={handleAddAllergy}
-                            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium flex items-center gap-1"
+                            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium flex items-center gap-2"
                             disabled={isDisabled}
                         >
-                            <Plus className="w-5 h-5" /> Thêm
+                            <Plus className="w-4 h-4" /> Thêm
                         </button>
                     </div>
-
-                    {formData.allergies.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                            {formData.allergies.map((allergy, index) => (
-                                <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full text-sm font-medium">
-                                    {allergy}
-                                    <button type="button" onClick={() => handleRemoveAllergy(index)} disabled={isDisabled}>
-                                        <Trash2 className="w-4 h-4 hover:text-yellow-900" />
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                    <div className="flex flex-wrap gap-2">
+                        {formData.allergies.map((allergy, index) => (
+                            <span key={index} className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full font-medium">
+                                {allergy}
+                                <button type="button" onClick={() => handleRemoveAllergy(index)} className="hover:text-yellow-900" disabled={isDisabled}>
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </span>
+                        ))}
+                    </div>
                 </div>
 
-                {/* First Aid Instructions - HIGHLIGHTED */}
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl shadow-sm border-2 border-emerald-300 dark:border-emerald-800 p-6">
+                {/* First Aid Instructions */}
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl shadow-lg p-6 text-white">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-emerald-500 rounded-lg">
-                            <Heart className="w-6 h-6 text-white" />
-                        </div>
-                        <h2 className="text-xl font-bold text-emerald-800 dark:text-emerald-300">Hướng Dẫn Sơ Cứu</h2>
+                        <Heart className="w-6 h-6" />
+                        <h2 className="text-xl font-bold">Hướng Dẫn Sơ Cứu</h2>
                     </div>
-
-                    <div className="bg-emerald-100/50 dark:bg-emerald-900/30 p-4 rounded-lg mb-4">
-                        <div className="flex items-start gap-2 text-emerald-800 dark:text-emerald-300">
-                            <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                            <div className="text-sm">
-                                <p className="font-semibold mb-1">Gợi ý cách ghi:</p>
-                                <ul className="list-disc list-inside space-y-1 text-emerald-700 dark:text-emerald-400">
-                                    <li>Bệnh tim: "Giúp tôi lấy thuốc trong ví, túi bên trái"</li>
-                                    <li>Tiểu đường: "Cho tôi uống nước đường nếu bất tỉnh"</li>
-                                    <li>Động kinh: "Đặt tôi nằm nghiêng, không cho gì vào miệng"</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
                     <textarea
+                        rows={4}
                         value={formData.firstAidInstructions}
                         onChange={(e) => setFormData({ ...formData, firstAidInstructions: e.target.value })}
-                        rows={4}
-                        className="w-full px-4 py-3 border-2 border-emerald-300 dark:border-emerald-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-4 py-3 border-0 rounded-lg bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
                         placeholder="Mô tả cách người khác có thể giúp bạn trong trường hợp khẩn cấp..."
                         disabled={isDisabled}
                     />
@@ -288,9 +473,7 @@ export default function CreateProfilePage() {
                 {/* Emergency Contacts */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-blue-500 rounded-lg">
-                            <Phone className="w-6 h-6 text-white" />
-                        </div>
+                        <Phone className="w-6 h-6 text-indigo-600" />
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Số Điện Thoại Khẩn Cấp</h2>
                     </div>
 
@@ -300,15 +483,15 @@ export default function CreateProfilePage() {
                             placeholder="Họ tên *"
                             value={contactInput.name}
                             onChange={(e) => setContactInput({ ...contactInput, name: e.target.value })}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             disabled={isDisabled}
                         />
                         <input
                             type="text"
-                            placeholder="Quan hệ (Bố, Mẹ, Vợ...)"
+                            placeholder="Mối quan hệ"
                             value={contactInput.relationship}
                             onChange={(e) => setContactInput({ ...contactInput, relationship: e.target.value })}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             disabled={isDisabled}
                         />
                         <input
@@ -316,7 +499,7 @@ export default function CreateProfilePage() {
                             placeholder="Số điện thoại *"
                             value={contactInput.phone}
                             onChange={(e) => setContactInput({ ...contactInput, phone: e.target.value })}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             disabled={isDisabled}
                         />
                     </div>
@@ -324,34 +507,31 @@ export default function CreateProfilePage() {
                     <button
                         type="button"
                         onClick={handleAddContact}
-                        className="mb-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-1"
-                        disabled={isDisabled}
+                        className="mb-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center gap-2"
+                        disabled={isDisabled || !contactInput.name.trim() || !contactInput.phone.trim()}
                     >
                         <Plus className="w-5 h-5" /> Thêm Liên Hệ
                     </button>
 
-                    {emergencyContacts.length > 0 && (
-                        <div className="space-y-3">
-                            {emergencyContacts.map((contact, index) => (
-                                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    <div>
-                                        <div className="font-bold text-gray-900 dark:text-white">{contact.name}</div>
-                                        {contact.relationship && <div className="text-sm text-gray-600 dark:text-gray-400">{contact.relationship}</div>}
-                                        <div className="text-blue-600 dark:text-blue-400">{contact.phone}</div>
-                                    </div>
-                                    <button type="button" onClick={() => handleRemoveContact(index)} className="text-red-500 hover:text-red-700" disabled={isDisabled}>
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+                    <div className="space-y-2">
+                        {emergencyContacts.map((contact, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div>
+                                    <span className="font-medium text-gray-900 dark:text-white">{contact.name}</span>
+                                    {contact.relationship && <span className="text-gray-500 dark:text-gray-400"> ({contact.relationship})</span>}
+                                    <span className="text-indigo-600 dark:text-indigo-400 ml-2">{contact.phone}</span>
                                 </div>
-                            ))}
-                        </div>
-                    )}
+                                <button type="button" onClick={() => handleRemoveContact(index)} className="text-red-500 hover:text-red-700" disabled={isDisabled}>
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Privacy Settings */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Quyền Riêng Tư</h2>
-
                     <div className="space-y-3 mb-4">
                         <label className="flex items-start gap-3 p-4 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
                             <input
@@ -365,7 +545,7 @@ export default function CreateProfilePage() {
                             />
                             <div>
                                 <div className="font-medium text-gray-900 dark:text-white">Chỉ qua link</div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">Chỉ người có link mới xem được</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">Chỉ người có link hoặc quét mã QR mới xem được</div>
                             </div>
                         </label>
 
@@ -397,7 +577,7 @@ export default function CreateProfilePage() {
                                 maxLength={4}
                                 value={formData.pin}
                                 onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
-                                className="w-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-xl tracking-widest"
+                                className="w-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-2xl tracking-widest focus:ring-2 focus:ring-indigo-500"
                                 placeholder="****"
                                 disabled={isDisabled}
                             />
@@ -407,17 +587,17 @@ export default function CreateProfilePage() {
 
                 {/* Submit */}
                 <div className="flex gap-4">
-                    <Link href="/dashboard" className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <Link href="/dashboard" className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         Hủy
                     </Link>
                     <button
                         type="submit"
                         disabled={isDisabled}
-                        className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
                     >
                         {isDisabled ? (
                             <>
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <Loader2 className="w-5 h-5 animate-spin" />
                                 {success ? 'Đang chuyển hướng...' : 'Đang tạo...'}
                             </>
                         ) : (

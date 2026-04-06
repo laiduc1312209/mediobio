@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
-import { AlertTriangle, Phone, Mail, Lock, X, Cake, Droplets, Heart, Activity } from 'lucide-react';
+import { AlertTriangle, Phone, Mail, Lock, X, Cake, Droplets, Heart, Activity, Pill, ClipboardList } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -13,7 +13,10 @@ interface BioData {
     avatarUrl?: string;
     bloodType?: string;
     allergies: string[];
-    doctorNotes?: string; // This now stores firstAidInstructions
+    medicalConditions?: string[];
+    currentMedications?: string[];
+    medicalHistory?: string;
+    doctorNotes?: string;
     personalMessage?: string;
     emergencyContacts: Array<{
         name: string;
@@ -183,6 +186,40 @@ export default function BioPage() {
                     </div>
                 )}
 
+                {/* Medical Conditions */}
+                {bio.medicalConditions && bio.medicalConditions.length > 0 && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border-l-4 border-indigo-500">
+                        <div className="flex items-center gap-3 mb-4">
+                            <Activity className="w-6 h-6 text-indigo-500" />
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tình Trạng Sức Khỏe</h2>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {bio.medicalConditions.map((condition, index) => (
+                                <span key={index} className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 rounded-lg font-medium">
+                                    {condition}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Current Medications */}
+                {bio.currentMedications && bio.currentMedications.length > 0 && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border-l-4 border-purple-500">
+                        <div className="flex items-center gap-3 mb-4">
+                            <Pill className="w-6 h-6 text-purple-500" />
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Thuốc Đang Dùng</h2>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {bio.currentMedications.map((medication, index) => (
+                                <span key={index} className="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded-lg font-medium">
+                                    {medication}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Allergies */}
                 {bio.allergies.length > 0 && (
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border-l-4 border-yellow-500">
@@ -197,6 +234,17 @@ export default function BioPage() {
                                 </span>
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {/* Medical History */}
+                {bio.medicalHistory && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <ClipboardList className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tiền Sử Y Tế</h2>
+                        </div>
+                        <p className="text-lg whitespace-pre-wrap text-gray-700 dark:text-gray-300">{bio.medicalHistory}</p>
                     </div>
                 )}
 

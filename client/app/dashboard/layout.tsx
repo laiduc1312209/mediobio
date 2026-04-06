@@ -80,7 +80,7 @@ export default function DashboardLayout({
             <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-100 dark:border-gray-700 sticky top-0 z-10">
                 <div className="container-custom h-16 flex items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-500/20">
                             M
                         </div>
                         <span className="font-bold text-gray-900 dark:text-white text-lg hidden sm:block">MediBio</span>
@@ -94,10 +94,10 @@ export default function DashboardLayout({
                             <img
                                 src={profile.avatarUrl}
                                 alt={user.username}
-                                className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-100 dark:ring-blue-900/30"
+                                className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-100 dark:ring-indigo-900/30"
                             />
                         ) : (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
                                 {user.username[0].toUpperCase()}
                             </div>
                         )}
