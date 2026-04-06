@@ -69,6 +69,7 @@ export async function createProfile(req: AuthRequest, res: Response): Promise<vo
             userId,
             fullName: validatedData.fullName,
             dateOfBirth: validatedData.dateOfBirth,
+            avatarUrl: validatedData.avatarUrl,
             bloodTypeEncrypted,
             medicalConditionsEncrypted,
             allergiesEncrypted,

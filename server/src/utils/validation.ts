@@ -19,6 +19,7 @@ export const loginSchema = z.object({
 export const medicalProfileSchema = z.object({
     fullName: z.string().min(1, 'Full name is required'),
     dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+    avatarUrl: z.string().url('Invalid avatar URL').optional().or(z.literal('')),
     bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '']).optional(),
     medicalConditions: z.array(z.string()).optional(),
     allergies: z.array(z.string()).optional(),
