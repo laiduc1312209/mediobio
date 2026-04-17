@@ -622,7 +622,7 @@ export default function EditProfilePage() {
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Lời Nhắn</h2>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Ghi chú cá nhân hoặc lời nhắn cho người xem hồ sơ của bạn (VD: nguyện vọng, hiến tạng, dị ứng đặc biệt...)
+                        Ghi chú cá nhân hoặc lời nhắn cho người xem hồ sơ của bạn (VD: nguyện vọng, dị ứng đặc biệt...)
                     </p>
                     <textarea
                         value={formData.personalMessage}

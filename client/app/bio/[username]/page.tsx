@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
-import { AlertTriangle, Phone, Mail, Lock, X, Cake, Droplets, Heart, Activity, Pill, ClipboardList } from 'lucide-react';
+import { AlertTriangle, Phone, Mail, Lock, X, Cake, Droplets, Heart, Activity, Pill, ClipboardList, MapPin, Loader2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -169,6 +169,12 @@ export default function BioPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Decorative Location Button - Non-functional placeholder */}
+                <div className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg p-6 flex items-center justify-center gap-3 transition-all cursor-default">
+                    <MapPin className="w-6 h-6" />
+                    <span className="text-xl font-semibold text-center">Cung cấp vị trí hiện tại</span>
                 </div>
 
                 {/* Blood Type - HIGHLIGHTED */}
