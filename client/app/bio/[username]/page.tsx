@@ -36,6 +36,7 @@ export default function BioPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [requiresPin, setRequiresPin] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
     const [pin, setPin] = useState('');
     const [pinError, setPinError] = useState('');
 
@@ -171,11 +172,14 @@ export default function BioPage() {
                     </div>
                 </div>
 
-                {/* Decorative Location Button - Non-functional placeholder */}
-                <div className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg p-6 flex items-center justify-center gap-3 transition-all cursor-default">
+                {/* Location Button - Functional */}
+                <button
+                    onClick={() => setShowLocationModal(true)}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg p-6 flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+                >
                     <MapPin className="w-6 h-6" />
                     <span className="text-xl font-semibold text-center">Cung cấp vị trí hiện tại</span>
-                </div>
+                </button>
 
                 {/* Blood Type - HIGHLIGHTED */}
                 {bio.bloodType && (
@@ -311,6 +315,67 @@ export default function BioPage() {
                     <p className="mt-1 text-xs">Thông tin này chỉ để tham khảo trong trường hợp khẩn cấp</p>
                 </div>
             </div>
+
+            {/* Emergency Contact Selection Modal */}
+            {showLocationModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Gửi Thông Báo</h3>
+                                <button 
+                                    onClick={() => setShowLocationModal(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                >
+                                    <X className="w-6 h-6 text-gray-500" />
+                                </button>
+                            </div>
+                            
+                            <div className="mb-6 text-center">
+                                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                                </div>
+                                <p className="text-gray-600 dark:text-gray-400">Chọn người thân để gửi thông báo khẩn cấp:</p>
+                            </div>
+
+                            <div className="space-y-3">
+                                {bio.emergencyContacts.length > 0 ? (
+                                    bio.emergencyContacts.slice(0, 2).map((contact, index) => (
+                                        <a
+                                            key={index}
+                                            href={`sms:${contact.phone}?body=${encodeURIComponent("Người thân của bạn đang gặp nạn")}`}
+                                            className="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all group active:scale-[0.98]"
+                                            onClick={() => setShowLocationModal(false)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md shadow-indigo-200 dark:shadow-none">
+                                                    {contact.name[0]}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-gray-900 dark:text-white">{contact.name}</div>
+                                                    <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">{contact.relationship || 'Người thân'}</div>
+                                                </div>
+                                            </div>
+                                            <Phone className="w-5 h-5 text-indigo-600 group-hover:translate-x-1 transition-transform" />
+                                        </a>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-6 text-gray-500 italic bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
+                                        Chưa có liên hệ khẩn cấp
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setShowLocationModal(false)}
+                                className="w-full mt-6 py-3 text-gray-600 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-white transition-colors"
+                            >
+                                Hủy bỏ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
