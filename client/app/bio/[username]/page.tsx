@@ -37,8 +37,56 @@ export default function BioPage() {
     const [error, setError] = useState('');
     const [requiresPin, setRequiresPin] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
+    const [gettingLocation, setGettingLocation] = useState(false);
+    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [locationError, setLocationError] = useState('');
     const [pin, setPin] = useState('');
     const [pinError, setPinError] = useState('');
+
+    const handleLocationButton = () => {
+        setGettingLocation(true);
+        setLocationError('');
+        setUserLocation(null);
+
+        if (!navigator.geolocation) {
+            setLocationError('Trình duyệt không hỗ trợ định vị');
+            setGettingLocation(false);
+            setShowLocationModal(true);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setUserLocation({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                });
+                setGettingLocation(false);
+                setShowLocationModal(true);
+            },
+            (err) => {
+                console.error('Geolocation error:', err);
+                setLocationError(
+                    err.code === 1 ? 'Bạn đã từ chối quyền truy cập vị trí' :
+                    err.code === 2 ? 'Không thể xác định vị trí' :
+                    'Hết thời gian lấy vị trí'
+                );
+                setGettingLocation(false);
+                setShowLocationModal(true);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    };
+
+    const buildSmsBody = (contactName: string) => {
+        const ownerName = bio?.fullName || 'Ai đó';
+        let msg = `[KHẨN CẤP] ${ownerName} đang cần trợ giúp!`;
+        if (userLocation) {
+            msg += `\nVị trí: https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}`;
+        }
+        msg += `\n(Tin nhắn tự động từ MediBio)`;
+        return msg;
+    };
 
     useEffect(() => {
         fetchBio();
@@ -174,11 +222,21 @@ export default function BioPage() {
 
                 {/* Location Button - Functional */}
                 <button
-                    onClick={() => setShowLocationModal(true)}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg p-6 flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+                    onClick={handleLocationButton}
+                    disabled={gettingLocation}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-2xl shadow-lg p-6 flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
                 >
-                    <MapPin className="w-6 h-6" />
-                    <span className="text-xl font-semibold text-center">Cung cấp vị trí hiện tại</span>
+                    {gettingLocation ? (
+                        <>
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <span className="text-xl font-semibold">Đang lấy vị trí...</span>
+                        </>
+                    ) : (
+                        <>
+                            <MapPin className="w-6 h-6" />
+                            <span className="text-xl font-semibold text-center">Gửi vị trí & Thông báo khẩn cấp</span>
+                        </>
+                    )}
                 </button>
 
                 {/* Blood Type - HIGHLIGHTED */}
@@ -331,19 +389,42 @@ export default function BioPage() {
                                 </button>
                             </div>
                             
-                            <div className="mb-6 text-center">
-                                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                                    <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
-                                </div>
-                                <p className="text-gray-600 dark:text-gray-400">Chọn người thân để gửi thông báo khẩn cấp:</p>
+                            {/* Location status */}
+                            <div className="mb-5">
+                                {userLocation ? (
+                                    <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                                        <MapPin className="w-5 h-5 text-green-600 flex-shrink-0" />
+                                        <div>
+                                            <div className="text-sm font-semibold text-green-700 dark:text-green-300">Đã xác định vị trí</div>
+                                            <a
+                                                href={`https://www.google.com/maps?q=${userLocation.lat},${userLocation.lng}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-green-600 dark:text-green-400 underline"
+                                            >
+                                                Xem trên Google Maps
+                                            </a>
+                                        </div>
+                                    </div>
+                                ) : locationError ? (
+                                    <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                                        <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                                        <div>
+                                            <div className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">{locationError}</div>
+                                            <div className="text-xs text-yellow-600 dark:text-yellow-400">Tin nhắn sẽ gửi mà không có vị trí</div>
+                                        </div>
+                                    </div>
+                                ) : null}
                             </div>
+
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">Chọn người thân để gửi tin nhắn khẩn cấp kèm vị trí:</p>
 
                             <div className="space-y-3">
                                 {bio.emergencyContacts.length > 0 ? (
-                                    bio.emergencyContacts.slice(0, 2).map((contact, index) => (
+                                    bio.emergencyContacts.sort((a, b) => a.priority - b.priority).map((contact, index) => (
                                         <a
                                             key={index}
-                                            href={`sms:${contact.phone}?body=${encodeURIComponent("Người thân của bạn đang gặp nạn")}`}
+                                            href={`sms:${contact.phone}?body=${encodeURIComponent(buildSmsBody(contact.name))}`}
                                             className="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all group active:scale-[0.98]"
                                             onClick={() => setShowLocationModal(false)}
                                         >
